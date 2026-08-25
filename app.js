@@ -197,12 +197,19 @@
   }
 
   function recordsFor(key) {
-    const memberId = activeMember().id;
+    return recordsForMember(key, activeMember().id);
+  }
+
+  function recordsForMember(key, memberId) {
     return state[key].filter((item) => item.memberId === memberId);
   }
 
   function completedRecordsFor(key) {
-    return recordsFor(key).filter((item) => item.status !== "in_progress");
+    return completedRecordsForMember(key, activeMember().id);
+  }
+
+  function completedRecordsForMember(key, memberId) {
+    return recordsForMember(key, memberId).filter((item) => item.status !== "in_progress");
   }
 
   function liveWorkoutFromSession(session, finished = false) {
@@ -308,6 +315,97 @@
       </article>`;
   }
 
+  function weeklyOverviewFor(member) {
+    const dates = weekDates();
+    const workouts = completedRecordsForMember("workouts", member.id);
+    const activities = completedRecordsForMember("activities", member.id);
+    const plans = recordsForMember("plans", member.id);
+    const weekWorkouts = workouts.filter((item) => isThisWeek(item.date));
+    const weekActivities = activities.filter((item) => isThisWeek(item.date));
+    const weekPlans = plans.filter((item) => isThisWeek(item.date));
+    const sessions = [...weekWorkouts, ...weekActivities];
+    const minutesByDay = dates.map((date) => sessions
+      .filter((item) => item.date === date)
+      .reduce((sum, item) => sum + number(item.duration), 0));
+    const previousStart = startOfWeek();
+    previousStart.setDate(previousStart.getDate() - 7);
+    const currentStart = startOfWeek();
+    const previousSessions = [...workouts, ...activities].filter((item) => {
+      const date = parseDate(item.date);
+      return date >= previousStart && date < currentStart;
+    }).length;
+    const completedPlans = weekPlans.filter((item) => item.completed).length;
+
+    return {
+      member,
+      sessions: sessions.length,
+      minutes: minutesByDay.reduce((sum, value) => sum + value, 0),
+      minutesByDay,
+      previousSessions,
+      completedPlans,
+      planCount: weekPlans.length,
+      completion: weekPlans.length ? Math.round(completedPlans / weekPlans.length * 100) : null
+    };
+  }
+
+  function weeklyChangeText(summary) {
+    if (!summary.sessions && !summary.previousSessions) return "本周还没有记录";
+    const change = summary.sessions - summary.previousSessions;
+    if (change > 0) return `比上周多 ${change} 次`;
+    if (change < 0) return `比上周少 ${Math.abs(change)} 次`;
+    return "与上周持平";
+  }
+
+  function weeklyOverviewCard(summary, maxMinutes) {
+    const active = summary.member.id === activeMember().id;
+    const weekdays = ["一", "二", "三", "四", "五", "六", "日"];
+    const bars = summary.minutesByDay.map((minutes, index) => {
+      const height = minutes && maxMinutes ? Math.max(8, Math.round(minutes / maxMinutes * 100)) : 0;
+      return `<div class="weekly-bar-day" aria-label="周${weekdays[index]} ${minutes} 分钟"><span class="weekly-bar-track">${minutes ? `<span class="weekly-bar-fill" style="height:${height}%"></span>` : ""}</span><small>${weekdays[index]}</small></div>`;
+    }).join("");
+
+    return `
+      <article class="weekly-member-card ${active ? "is-active" : ""}" style="--member-color:${esc(summary.member.color)}">
+        <div class="weekly-member-head">
+          <button class="weekly-member-switch" type="button" data-action="select-member" data-id="${summary.member.id}" aria-label="切换到 ${esc(summary.member.name)} 界面">
+            <span class="weekly-member-avatar">${esc(summary.member.initial)}</span>
+            <span><strong>${esc(summary.member.name)}</strong><small>${esc(weeklyChangeText(summary))}</small></span>
+          </button>
+          <span class="weekly-member-state">${active ? "当前界面" : "切换"}</span>
+        </div>
+        <div class="weekly-metrics">
+          <div><span>训练次数</span><strong>${summary.sessions}<small> 次</small></strong></div>
+          <div><span>运动时长</span><strong>${summary.minutes}<small> 分</small></strong></div>
+          <div><span>计划完成</span><strong>${summary.completion ?? "—"}<small>${summary.completion === null ? "" : "%"}</small></strong></div>
+        </div>
+        <div class="weekly-bars" aria-label="${esc(summary.member.name)} 本周每天训练时长">${bars}</div>
+        <div class="weekly-card-foot"><span>${summary.completedPlans}/${summary.planCount} 项计划完成</span><span>${summary.sessions ? formatMinutes(summary.minutes) : "等待第一次记录"}</span></div>
+      </article>`;
+  }
+
+  function renderWeeklyOverview() {
+    const summaries = state.settings.members.map(weeklyOverviewFor);
+    const maxMinutes = Math.max(0, ...summaries.flatMap((summary) => summary.minutesByDay));
+    const dates = weekDates();
+    const range = `${formatDate(dates[0], { month: "numeric", day: "numeric" })}—${formatDate(dates[6], { month: "numeric", day: "numeric" })}`;
+
+    return `
+      <section class="dashboard-weekly-overview" aria-labelledby="weekly-overview-title">
+        <div class="weekly-overview-head">
+          <div>
+            <p class="eyebrow">BETTY × STEPHEN · ${range}</p>
+            <h1 id="weekly-overview-title">本周训练总览</h1>
+            <p>两个人的训练次数、运动时长和计划完成情况。当前记录到 ${esc(activeMember().name)}。</p>
+          </div>
+          <div class="hero-actions">
+            <button class="button button-primary" type="button" data-navigate="training" data-open="strength-composer">＋ 记录训练</button>
+            <button class="button button-quiet" type="button" data-navigate="activities" data-open="activity-composer">记录运动</button>
+          </div>
+        </div>
+        <div class="weekly-member-grid">${summaries.map((summary) => weeklyOverviewCard(summary, maxMinutes)).join("")}</div>
+      </section>`;
+  }
+
   function renderDashboard() {
     const workouts = completedRecordsFor("workouts");
     const activities = completedRecordsFor("activities");
@@ -323,23 +421,11 @@
       ...workouts.map((item) => ({ ...item, category: "workout" })),
       ...activities.map((item) => ({ ...item, category: "activity" }))
     ].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 5);
-    const hour = new Date().getHours();
-    const greeting = hour < 11 ? "早上好" : hour < 18 ? "下午好" : "晚上好";
     const liveSession = currentLiveSession();
 
     return `
       <section class="view">
-        <div class="dashboard-hero">
-          <div class="hero-content">
-            <p class="eyebrow">${greeting}，${esc(activeMember().name)}</p>
-            <h1>让今天的训练<br>成为明天的底气。</h1>
-            <p>${todayPlans.length ? `今天有 ${todayPlans.length} 项计划，${todayPlans.filter((item) => item.completed).length} 项已经完成。` : "今天还没有计划。可以安排训练，也可以给恢复留出空间。"}</p>
-            <div class="hero-actions">
-              <button class="button button-primary" type="button" data-navigate="training" data-open="strength-composer">＋ 记录训练</button>
-              <button class="button button-quiet" type="button" data-navigate="activities" data-open="activity-composer">记录运动</button>
-            </div>
-          </div>
-        </div>
+        ${renderWeeklyOverview()}
 
         ${renderLiveCounter(liveSession)}
 
