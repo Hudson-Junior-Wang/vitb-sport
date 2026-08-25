@@ -1,429 +1,110 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="zh-CN">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>VITB Sport — Live Scores, News & Community</title>
-  <meta name="description" content="VITB Sport: the home of university sports. Live scores, match news, fixtures, teams and community events.">
-  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%230f766e'/><circle cx='16' cy='16' r='8' fill='none' stroke='%23ccfbf1' stroke-width='2'/><line x1='16' y1='8' x2='16' y2='24' stroke='%23ccfbf1' stroke-width='2'/><line x1='8' y1='16' x2='24' y2='16' stroke='%23ccfbf1' stroke-width='2'/></svg>">
-  <style>
-    :root {
-      --bg: #f8fafc;
-      --surface: #ffffff;
-      --ink: #0f172a;
-      --muted: #64748b;
-      --brand: #0f766e;
-      --brand-dark: #115e59;
-      --line: #e2e8f0;
-      --accent: #f59e0b;
-    }
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      background: var(--bg);
-      color: var(--ink);
-      line-height: 1.6;
-    }
-    .container { max-width: 1080px; margin: 0 auto; padding: 0 1.5rem; }
-
-    /* ── nav ── */
-    header {
-      position: sticky; top: 0; z-index: 50;
-      background: rgba(15, 23, 42, 0.92);
-      backdrop-filter: blur(8px);
-      color: #f8fafc;
-    }
-    .nav {
-      display: flex; align-items: center; justify-content: space-between;
-      height: 64px;
-    }
-    .brand {
-      font-size: 1.25rem; font-weight: 800; letter-spacing: -0.5px;
-      display: flex; align-items: center; gap: 0.5rem;
-    }
-    .brand .dot {
-      width: 10px; height: 10px; border-radius: 50%;
-      background: var(--accent); display: inline-block;
-    }
-    .nav-links { display: flex; gap: 1.75rem; list-style: none; }
-    .nav-links a {
-      color: #cbd5e1; text-decoration: none; font-size: 0.95rem;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: #ffffff; }
-    .nav-cta {
-      background: var(--accent); color: #0f172a; font-weight: 700;
-      padding: 0.45rem 1.1rem; border-radius: 999px; text-decoration: none;
-      font-size: 0.9rem;
-    }
-    .nav-cta:hover { background: #fbbf24; }
-
-    /* ── hero ── */
-    .hero {
-      background: linear-gradient(135deg, #0f172a 0%, #134e4a 100%);
-      color: #f8fafc;
-      padding: 5.5rem 0;
-      text-align: center;
-    }
-    .hero h1 {
-      font-size: clamp(2.2rem, 6vw, 3.5rem);
-      font-weight: 900; letter-spacing: -1.5px;
-      margin-bottom: 1rem;
-    }
-    .hero h1 span {
-      background: linear-gradient(90deg, #2dd4bf, #f59e0b);
-      -webkit-background-clip: text; background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-    .hero p {
-      max-width: 640px; margin: 0 auto 2rem;
-      color: #a7f3d0; font-size: 1.15rem;
-    }
-    .hero-actions { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    .btn {
-      display: inline-block; padding: 0.75rem 1.75rem; border-radius: 999px;
-      font-weight: 700; text-decoration: none; font-size: 0.95rem;
-      transition: transform 0.15s, box-shadow 0.15s;
-    }
-    .btn:hover { transform: translateY(-2px); }
-    .btn-primary { background: var(--accent); color: #0f172a; }
-    .btn-ghost { border: 1.5px solid #2dd4bf; color: #ccfbf1; }
-    .btn-ghost:hover { background: rgba(45, 212, 191, 0.1); }
-
-    /* ── scoreboard strip ── */
-    .scores {
-      background: var(--surface);
-      border-bottom: 1px solid var(--line);
-      padding: 1.25rem 0;
-      overflow: hidden;
-    }
-    .scores-inner {
-      display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center;
-    }
-    .score-card {
-      display: flex; align-items: center; gap: 0.75rem;
-      background: #f1f5f9; border: 1px solid var(--line);
-      border-radius: 12px; padding: 0.55rem 1rem;
-      font-size: 0.9rem;
-    }
-    .score-card .team { font-weight: 700; }
-    .score-card .result {
-      background: var(--brand); color: #fff;
-      padding: 0.15rem 0.6rem; border-radius: 8px;
-      font-weight: 800; font-variant-numeric: tabular-nums;
-    }
-    .score-card .live {
-      background: #ef4444; color: #fff;
-      padding: 0.15rem 0.5rem; border-radius: 999px;
-      font-size: 0.7rem; font-weight: 800; text-transform: uppercase;
-      letter-spacing: 0.5px; animation: pulse 1.5s infinite;
-    }
-    @keyframes pulse { 50% { opacity: 0.55; } }
-
-    /* ── sections ── */
-    section { padding: 4.5rem 0; }
-    .section-head { margin-bottom: 2.25rem; }
-    .section-head h2 { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.5px; }
-    .section-head .sub { color: var(--muted); margin-top: 0.4rem; }
-
-    /* news grid */
-    .news-grid {
-      display: grid; gap: 1.5rem;
-      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    }
-    .news-card {
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 16px; padding: 1.5rem;
-      transition: box-shadow 0.2s, transform 0.2s;
-    }
-    .news-card:hover { box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08); transform: translateY(-3px); }
-    .news-card .tag {
-      display: inline-block; font-size: 0.72rem; font-weight: 800;
-      color: var(--brand-dark); background: #ccfbf1;
-      padding: 0.2rem 0.6rem; border-radius: 999px;
-      text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.75rem;
-    }
-    .news-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
-    .news-card p { color: var(--muted); font-size: 0.92rem; }
-    .news-card .meta {
-      margin-top: 1rem; font-size: 0.8rem; color: #94a3b8;
-      display: flex; justify-content: space-between;
-    }
-
-    /* fixtures table */
-    .fixtures {
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 16px; overflow: hidden;
-    }
-    table { width: 100%; border-collapse: collapse; }
-    th, td { text-align: left; padding: 0.9rem 1.5rem; font-size: 0.92rem; }
-    th {
-      background: #f8fafc; color: var(--muted);
-      font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.6px;
-      border-bottom: 1px solid var(--line);
-    }
-    td { border-bottom: 1px solid #f1f5f9; }
-    tr:last-child td { border-bottom: none; }
-    td .vs { color: var(--muted); }
-    .badge {
-      font-size: 0.72rem; font-weight: 800; padding: 0.2rem 0.6rem;
-      border-radius: 999px;
-    }
-    .badge-finished { background: #f1f5f9; color: var(--muted); }
-    .badge-upcoming { background: #fef3c7; color: #92400e; }
-    .badge-live { background: #fee2e2; color: #b91c1c; }
-
-    /* teams */
-    .team-grid {
-      display: grid; gap: 1.25rem;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    }
-    .team-card {
-      background: var(--surface); border: 1px solid var(--line);
-      border-radius: 16px; padding: 1.5rem; text-align: center;
-    }
-    .team-card .emoji { font-size: 2.2rem; }
-    .team-card h3 { margin: 0.6rem 0 0.25rem; }
-    .team-card p { color: var(--muted); font-size: 0.85rem; }
-
-    /* newsletter / community */
-    .community {
-      background: linear-gradient(135deg, #134e4a, #0f172a);
-      color: #f8fafc; border-radius: 24px;
-      padding: 3.5rem 2rem; text-align: center;
-    }
-    .community h2 { font-size: 1.8rem; margin-bottom: 0.75rem; }
-    .community p { color: #a7f3d0; max-width: 520px; margin: 0 auto 2rem; }
-    .form {
-      display: flex; gap: 0.75rem; justify-content: center;
-      flex-wrap: wrap; max-width: 480px; margin: 0 auto;
-    }
-    .form input {
-      flex: 1; min-width: 220px; padding: 0.75rem 1.1rem;
-      border-radius: 999px; border: 1px solid #2dd4bf;
-      background: rgba(255,255,255,0.08); color: #fff; font-size: 0.95rem;
-      outline: none;
-    }
-    .form input::placeholder { color: #99f6e4; }
-    .form button {
-      padding: 0.75rem 1.6rem; border-radius: 999px;
-      background: var(--accent); color: #0f172a; font-weight: 800;
-      border: none; cursor: pointer; font-size: 0.95rem;
-    }
-
-    /* footer */
-    footer {
-      background: #0f172a; color: #94a3b8;
-      padding: 2.5rem 0; margin-top: 2rem;
-    }
-    .footer-inner {
-      display: flex; justify-content: space-between; align-items: center;
-      gap: 1rem; flex-wrap: wrap;
-    }
-    footer .brand { color: #f8fafc; }
-    .footer-links { display: flex; gap: 1.5rem; list-style: none; }
-    .footer-links a { color: #94a3b8; text-decoration: none; font-size: 0.9rem; }
-    .footer-links a:hover { color: #f8fafc; }
-    .copyright { font-size: 0.82rem; margin-top: 1.25rem; }
-
-    @media (max-width: 640px) {
-      .nav-links { display: none; }
-      section { padding: 3rem 0; }
-      th, td { padding: 0.7rem 0.9rem; }
-    }
-  </style>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#101714">
+  <meta name="description" content="VITB Sport — 简洁、私密的训练、运动、饮食与身体数据记录工具。">
+  <title>VITB Sport · 训练与运动记录</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23101714'/%3E%3Cpath d='M18 38V26m7 17V21m14 22V21m7 17V26M13 32h38' stroke='%23b7f36b' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="styles.css">
+  <script src="app.js" defer></script>
 </head>
 <body>
+  <a class="skip-link" href="#main-content">跳到主要内容</a>
 
-<header>
-  <div class="container nav">
-    <div class="brand"><span class="dot"></span>VITB SPORT</div>
-    <ul class="nav-links">
-      <li><a href="#news">News</a></li>
-      <li><a href="#scores">Scores</a></li>
-      <li><a href="#fixtures">Fixtures</a></li>
-      <li><a href="#teams">Teams</a></li>
-    </ul>
-    <a class="nav-cta" href="#community">Join In</a>
-  </div>
-</header>
+  <div class="app-shell">
+    <aside class="sidebar" id="sidebar" aria-label="主要导航">
+      <div class="brand">
+        <span class="brand-mark" aria-hidden="true">
+          <svg viewBox="0 0 32 32"><path d="M7 19v-6m4 9V10m10 12V10m4 9v-6M4 16h24"/></svg>
+        </span>
+        <span><strong>VITB</strong><small>SPORT</small></span>
+      </div>
 
-<section class="hero">
-  <div class="container">
-    <h1>Play Hard.<br>Live <span>Every Match</span>.</h1>
-    <p>Your home for university sport — live scores, fixtures, team news and the community behind it all.</p>
-    <div class="hero-actions">
-      <a class="btn btn-primary" href="#fixtures">View Fixtures</a>
-      <a class="btn btn-ghost" href="#community">Join the Club</a>
-    </div>
-  </div>
-</section>
+      <nav class="primary-nav">
+        <p class="nav-label">训练中心</p>
+        <button class="nav-item is-active" type="button" data-view="dashboard">
+          <span aria-hidden="true">⌂</span><span>首页</span>
+        </button>
+        <button class="nav-item" type="button" data-view="training">
+          <span aria-hidden="true">▰</span><span>训练记录</span>
+        </button>
+        <button class="nav-item" type="button" data-view="activities">
+          <span aria-hidden="true">↗</span><span>运动记录</span>
+        </button>
+        <button class="nav-item" type="button" data-view="plans">
+          <span aria-hidden="true">□</span><span>训练计划</span>
+        </button>
 
-<section class="scores" id="scores">
-  <div class="container scores-inner">
-    <div class="score-card">
-      <span class="team">VITB Raptors</span>
-      <span class="result">74 – 68</span>
-      <span class="team">Westfield Wolves</span>
-    </div>
-    <div class="score-card">
-      <span class="team">VITB Strikers</span>
-      <span class="result">2 – 2</span>
-      <span class="team">Northgate United</span>
-    </div>
-    <div class="score-card">
-      <span class="live">Live</span>
-      <span class="team">VITB Falcons</span>
-      <span class="result">3 – 1</span>
-      <span class="team">Riverside FC</span>
-    </div>
-    <div class="score-card">
-      <span class="team">VITB Cobras</span>
-      <span class="result">21 – 14</span>
-      <span class="team">Eastside Sharks</span>
-    </div>
-  </div>
-</section>
+        <p class="nav-label">健康数据</p>
+        <button class="nav-item" type="button" data-view="nutrition">
+          <span aria-hidden="true">◒</span><span>饮食记录</span>
+        </button>
+        <button class="nav-item" type="button" data-view="body">
+          <span aria-hidden="true">◇</span><span>身体数据</span>
+        </button>
+        <button class="nav-item" type="button" data-view="analytics">
+          <span aria-hidden="true">⌁</span><span>数据分析</span>
+        </button>
 
-<section id="news">
-  <div class="container">
-    <div class="section-head">
-      <h2>Latest News</h2>
-      <p class="sub">Match reports, signings and club announcements.</p>
-    </div>
-    <div class="news-grid">
-      <article class="news-card">
-        <span class="tag">Match Report</span>
-        <h3>Raptors edge Wolves in thriller to stretch win streak to five</h3>
-        <p>A fourth-quarter surge sealed the win at the VITB Arena, with a season-high 28 points from guard Alex Tran.</p>
-        <div class="meta"><span>Basketball</span><time>2 days ago</time></div>
-      </article>
-      <article class="news-card">
-        <span class="tag">Team News</span>
-        <h3>Strikers announce summer tournament squad</h3>
-        <p>Head coach Maria Santos names a 20-player squad featuring four debutants ahead of the inter-university cup.</p>
-        <div class="meta"><span>Football</span><time>4 days ago</time></div>
-      </article>
-      <article class="news-card">
-        <span class="tag">Community</span>
-        <h3>Registrations open for the winter 5-a-side league</h3>
-        <p>Entry closes 30 September. Teams of 8–12, all abilities welcome — gear up for the club season.</p>
-        <div class="meta"><span>Club</span><time>1 week ago</time></div>
-      </article>
-    </div>
-  </div>
-</section>
+        <p class="nav-label">空间</p>
+        <button class="nav-item" type="button" data-view="members">
+          <span aria-hidden="true">◎</span><span>Betty / Stephen</span>
+        </button>
+        <button class="nav-item" type="button" data-view="privacy">
+          <span aria-hidden="true">◉</span><span>隐私与数据</span>
+        </button>
+      </nav>
 
-<section id="fixtures" style="background:#f1f5f9;">
-  <div class="container">
-    <div class="section-head">
-      <h2>Fixtures &amp; Results</h2>
-      <p class="sub">The coming week across all VITB teams.</p>
-    </div>
-    <div class="fixtures">
-      <table>
-        <thead>
-          <tr><th>Date</th><th>Sport</th><th>Match</th><th>Venue</th><th>Status</th></tr>
-        </thead>
-        <tbody>
-          <tr>
-            <td>Mon 12 Aug, 19:00</td><td>Basketball</td>
-            <td>VITB Raptors <span class="vs">vs</span> Lakeside Lakers</td>
-            <td>VITB Arena</td><td><span class="badge badge-upcoming">Upcoming</span></td>
-          </tr>
-          <tr>
-            <td>Tue 13 Aug, 18:30</td><td>Football</td>
-            <td>VITB Strikers <span class="vs">vs</span> City College</td>
-            <td>North Field</td><td><span class="badge badge-upcoming">Upcoming</span></td>
-          </tr>
-          <tr>
-            <td>Wed 14 Aug, 17:00</td><td>Rugby</td>
-            <td>VITB Falcons <span class="vs">vs</span> Harbour RFC</td>
-            <td>South Oval</td><td><span class="badge badge-upcoming">Upcoming</span></td>
-          </tr>
-          <tr>
-            <td>Fri 16 Aug, 19:30</td><td>Volleyball</td>
-            <td>VITB Cobras <span class="vs">vs</span> Bayview Blaze</td>
-            <td>Sports Hall</td><td><span class="badge badge-upcoming">Upcoming</span></td>
-          </tr>
-          <tr>
-            <td>Sat 10 Aug, 15:00</td><td>Basketball</td>
-            <td>VITB Raptors <span class="vs">74 – 68</span> Westfield Wolves</td>
-            <td>VITB Arena</td><td><span class="badge badge-finished">Finished</span></td>
-          </tr>
-        </tbody>
-      </table>
+      <div class="sidebar-foot">
+        <div class="storage-card">
+          <span class="status-dot" aria-hidden="true"></span>
+          <div><strong>仅保存在本机</strong><small>未连接云端 · 可随时导出</small></div>
+        </div>
+      </div>
+    </aside>
+
+    <button class="sidebar-scrim" id="sidebar-scrim" type="button" aria-label="关闭导航"></button>
+
+    <div class="workspace">
+      <header class="topbar">
+        <button class="icon-button mobile-menu" id="mobile-menu" type="button" aria-label="打开导航" aria-controls="sidebar" aria-expanded="false">☰</button>
+        <div class="today-label">
+          <small id="today-weekday">今天</small>
+          <strong id="today-date">—</strong>
+        </div>
+        <div class="topbar-actions">
+          <span class="local-badge"><span class="status-dot"></span>本地模式</span>
+          <div class="profile-switch" aria-label="切换个人界面">
+            <button class="profile-option" type="button" data-action="select-member" data-id="betty"><span>B</span><strong>Betty</strong></button>
+            <button class="profile-option" type="button" data-action="select-member" data-id="stephen"><span>S</span><strong>Stephen</strong></button>
+          </div>
+        </div>
+      </header>
+
+      <main id="main-content" tabindex="-1">
+        <div id="view-root" aria-live="polite"></div>
+      </main>
     </div>
   </div>
-</section>
 
-<section id="teams">
-  <div class="container">
-    <div class="section-head">
-      <h2>Our Teams</h2>
-      <p class="sub">Rep your colours — every team has a home here.</p>
-    </div>
-    <div class="team-grid">
-      <div class="team-card">
-        <div class="emoji">🏀</div>
-        <h3>Basketball</h3>
-        <p>Raptors &amp; Cobras — men's and women's league seasons.</p>
-      </div>
-      <div class="team-card">
-        <div class="emoji">⚽</div>
-        <h3>Football</h3>
-        <p>Strikers lead the inter-university table.</p>
-      </div>
-      <div class="team-card">
-        <div class="emoji">🏉</div>
-        <h3>Rugby</h3>
-        <p>Falcons pack down every Wednesday night.</p>
-      </div>
-      <div class="team-card">
-        <div class="emoji">🏐</div>
-        <h3>Volleyball</h3>
-        <p>Indoor season tips off in September.</p>
-      </div>
-      <div class="team-card">
-        <div class="emoji">🏓</div>
-        <h3>Table Tennis</h3>
-        <p>Social ladder every Friday at the sports hall.</p>
-      </div>
-      <div class="team-card">
-        <div class="emoji">🎾</div>
-        <h3>Tennis</h3>
-        <p>Club nights, coaching and tournaments all year.</p>
-      </div>
-    </div>
-  </div>
-</section>
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
 
-<section id="community" class="container">
-  <div class="community">
-    <h2>Never miss a match</h2>
-    <p>Get fixtures, results and club news straight to your inbox. One email a week, no spam.</p>
-    <form class="form" onsubmit="event.preventDefault(); alert('Thanks! You are on the list. (Demo form)');">
-      <input type="email" placeholder="you@example.com" required>
-      <button type="submit">Subscribe</button>
+  <dialog class="confirm-dialog" id="confirm-dialog">
+    <form id="confirm-form">
+      <span class="dialog-icon" aria-hidden="true">!</span>
+      <h2 id="confirm-title">确认操作</h2>
+      <p id="confirm-message"></p>
+      <div class="dialog-actions">
+        <button class="button button-quiet" id="confirm-cancel" type="button">取消</button>
+        <button class="button button-danger" id="confirm-ok" type="button">确认</button>
+      </div>
     </form>
-  </div>
-</section>
+  </dialog>
 
-<footer>
-  <div class="container">
-    <div class="footer-inner">
-      <div class="brand"><span class="dot"></span>VITB SPORT</div>
-      <ul class="footer-links">
-        <li><a href="#news">News</a></li>
-        <li><a href="#scores">Scores</a></li>
-        <li><a href="#fixtures">Fixtures</a></li>
-        <li><a href="#teams">Teams</a></li>
-      </ul>
-    </div>
-    <p class="copyright">© 2026 VITB Sport. All rights reserved.</p>
-  </div>
-</footer>
-
+  <noscript>
+    <div class="noscript">此应用需要 JavaScript 才能保存和展示本地训练数据。</div>
+  </noscript>
 </body>
 </html>
