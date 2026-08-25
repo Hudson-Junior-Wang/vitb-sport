@@ -1,14 +1,43 @@
 # VITB Sport
 
-Static single-page site for VITB Sport — news, scores, fixtures and teams.
+VITB Sport 是一个适配电脑和手机的健身与运动记录网站。第一阶段为纯静态前端应用，数据仅保存在当前浏览器的 `localStorage`，不需要账号、数据库或构建工具；首次打开使用空白数据，不会混入演示记录。
 
-## Deploy (GitHub Pages)
+## 第一阶段功能
 
-1. Push to the repo's `main` branch
-2. Repo → Settings → Pages → Source: **Deploy from a branch**, branch `main`, folder `/`
-3. Custom domain (vitb-sport.com): already set via `CNAME` file; point DNS at GitHub Pages
+- Dashboard：今日计划、本周训练次数、运动时长、完成率、最近记录，以及可刷新恢复的实时组数计数器
+- 实时计数组：开始时即建立“进行中”训练记录，每完成或撤销一组都即时同步；自动休息倒计时，结束后同一记录转为完成状态
+- 力量训练：动作、部位、重量、组数、次数、休息、RPE、时长和备注
+- 运动记录：跑步、游泳、跳绳、拳击、散打、骑行、徒步、球类和自定义运动；表单会随运动类型变化
+- 周计划：训练日和运动日通过关联记录自动完成，删除记录会恢复为未完成；休息日可手动完成
+- 饮食记录：热量、三大营养素、饮水和四类餐食
+- 身体数据：体重、腰围、臀围等记录和趋势
+- 数据分析：训练次数、运动时间、运动占比、力量、跑步、游泳和身体趋势
+- Betty 与 Stephen 两个固定、互相独立的个人界面
+- 训练、运动、计划、饮食和身体数据的独立权限设置
+- JSON 数据导入、导出和本地清除
 
-## Files
+## 文件
 
-- `index.html` — single-page site (no build step, no dependencies)
-- `CNAME` — custom domain for GitHub Pages
+- `index.html`：静态应用入口
+- `styles.css`：响应式界面和打印样式
+- `app.js`：本地数据模型、业务逻辑、表单和图表
+- `CNAME`：GitHub Pages 自定义域名，必须保留为 `vitb-sport.com`
+
+## 本地运行
+
+直接打开 `index.html` 即可。推荐通过任意静态文件服务器预览，以获得与 GitHub Pages 一致的路径行为。
+
+## GitHub Pages
+
+现有部署方式保持不变：
+
+1. Settings → Pages → **Deploy from a branch**
+2. 分支：`main`
+3. 目录：`/ (root)`
+4. 自定义域名由根目录 `CNAME` 提供，不需要修改 Porkbun DNS
+
+开发应先在独立分支完成并验证；确认后通过 Pull Request 合并到 `main`，合并后 GitHub Pages 会发布静态文件。
+
+## 数据与隐私
+
+本阶段不会将任何训练、饮食或身体数据发送到网络。浏览器清理站点数据会删除 Betty、Stephen 以及进行中计数组的本地记录，请定期在“隐私与数据”中导出备份。未来若接入多设备同步，必须实施服务端鉴权、行级权限和审计日志。
