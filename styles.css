@@ -164,6 +164,18 @@ main { padding: clamp(22px, 4vw, 48px); }
 .live-session-head h2 { margin: 7px 0 3px; font-size: clamp(23px, 3vw, 34px); letter-spacing: -.04em; }
 .live-session-head p { margin: 0; color: #9eaea5; font-size: 11px; }
 .live-discard { color: #e4ebe6; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); }
+.live-session-editor { background: #f7faf6; border-bottom: 1px solid var(--line); }
+.live-session-editor > summary { display: flex; align-items: center; gap: 10px; padding: 12px 25px; color: var(--ink-soft); cursor: pointer; list-style: none; }
+.live-session-editor > summary::-webkit-details-marker { display: none; }
+.live-session-editor > summary span { font-size: 11px; font-weight: 800; }
+.live-session-editor > summary small { color: var(--muted); font-size: 9px; }
+.live-session-editor > summary::after { margin-left: auto; content: "编辑 ＋"; color: #4e7b2d; font-size: 9px; font-weight: 800; }
+.live-session-editor[open] > summary::after { content: "收起 −"; }
+.live-session-edit-form { padding: 5px 25px 20px; }
+.live-edit-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 11px; }
+.live-edit-actions { display: flex; align-items: center; justify-content: space-between; gap: 15px; margin-top: 14px; }
+.live-edit-actions small { color: var(--muted); font-size: 9px; }
+.live-edit-actions .button { min-width: 118px; }
 .live-session-body { display: grid; grid-template-columns: minmax(240px, .78fr) minmax(310px, 1.22fr); }
 .live-progress-panel { display: grid; min-height: 245px; align-content: center; padding: 25px; background: var(--surface-soft); border-right: 1px solid var(--line); }
 .live-count { display: flex; align-items: baseline; gap: 9px; }
@@ -192,6 +204,8 @@ main { padding: clamp(22px, 4vw, 48px); }
 .live-finished > span { display: grid; width: 43px; height: 43px; margin-bottom: 7px; place-items: center; color: #1e350f; background: var(--lime); border-radius: 50%; font-weight: 900; }
 .live-finished strong, .live-finished small { display: block; }
 .live-finished small { margin: 3px 0 12px; color: var(--muted); font-size: 10px; }
+.live-finished-actions { display: grid; grid-template-columns: minmax(115px, .42fr) minmax(0, 1fr); gap: 9px; }
+.live-finished-actions .button, .live-finished-actions .live-complete-button { min-height: 58px; }
 .live-secondary-actions { display: flex; gap: 8px; }
 .live-secondary-actions .button { flex: 1; }
 .live-secondary-actions .button:disabled { opacity: .42; cursor: not-allowed; transform: none; }
@@ -416,7 +430,14 @@ main { padding: clamp(22px, 4vw, 48px); }
   .live-exercise-field { grid-column: 1 / -1; }
   .live-session-head { display: block; padding: 20px; }
   .live-discard { margin-top: 13px; }
+  .live-session-editor > summary { align-items: flex-start; flex-wrap: wrap; padding: 13px 20px; }
+  .live-session-editor > summary small { flex-basis: calc(100% - 70px); }
+  .live-session-edit-form { padding: 4px 20px 18px; }
+  .live-edit-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .live-edit-actions { align-items: stretch; flex-direction: column; }
+  .live-edit-actions .button { width: 100%; }
   .live-progress-panel, .live-action-panel { padding: 20px; }
+  .live-finished-actions { grid-template-columns: 1fr; }
   .live-secondary-actions { flex-direction: column; }
   .field.span-2, .field.span-3, .field.span-4 { grid-column: auto; }
   .form-body { padding: 16px; }

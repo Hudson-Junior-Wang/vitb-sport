@@ -511,6 +511,25 @@
           </div>
           <button class="button button-small live-discard" type="button" data-action="discard-live-session">${completed ? "结束本次" : "放弃本次"}</button>
         </div>
+        <details class="live-session-editor">
+          <summary><span>编辑本次训练信息</span><small>可修改动作、重量、次数、休息和目标组数</small></summary>
+          <form class="live-session-edit-form" id="live-session-edit-form">
+            <div class="live-edit-grid">
+              ${planSelectField("training", session.planId || "")}
+              ${selectField("bodyPart", "训练部位", ["肩部", "胸部", "背部", "手臂", "腿部", "臀部", "核心", "全身"], session.bodyPart)}
+              ${field("exercise", "当前动作", "text", session.exercise, "例如：哑铃肩推", true, "live-exercise-field")}
+              ${field("targetSets", "目标组数", "number", target, "", true, "", `min="${Math.max(1, completed)}" max="99"`)}
+              ${field("reps", "每组次数", "number", number(session.reps), "", true, "", "min=\"1\" max=\"999\"")}
+              ${field("weight", "重量（kg）", "number", number(session.weight) || "", "选填", false, "", "min=\"0\" step=\"0.5\"")}
+              ${field("rest", "组间休息（秒）", "number", number(session.rest), "", true, "", "min=\"0\" max=\"900\"")}
+              ${field("rpe", "预计 RPE", "number", number(session.rpe, 7), "", false, "", "min=\"1\" max=\"10\"")}
+            </div>
+            <div class="live-edit-actions">
+              <small>${completed ? `已经完成 ${completed} 组，目标组数不能低于 ${completed}。` : "保存后，下一组会立即使用新的训练信息。"}</small>
+              <button class="button button-primary" type="submit">保存修改</button>
+            </div>
+          </form>
+        </details>
         <div class="live-session-body">
           <div class="live-progress-panel">
             <div class="live-count"><strong>${completed}</strong><span>/ ${target} 组</span></div>
@@ -521,7 +540,10 @@
           <div class="live-action-panel">
             ${finished ? `
               <div class="live-finished"><span>✓</span><strong>${target} 组全部完成</strong><small>训练记录已经同步；结束后会同时完成关联计划。</small></div>
-              <button class="live-complete-button is-finish" type="button" data-action="finish-live-session">完成并保存</button>
+              <div class="live-finished-actions">
+                <button class="button button-quiet" type="button" data-action="add-live-target-set">＋ 再加一组</button>
+                <button class="live-complete-button is-finish" type="button" data-action="finish-live-session">完成并保存</button>
+              </div>
             ` : `
               <div class="rest-status ${resting ? "is-resting" : ""}">
                 <span>${resting ? "休息倒计时" : `下一组：第 ${completed + 1} 组`}</span>
@@ -1154,6 +1176,41 @@
     render();
   }
 
+  function updateLiveSession(form) {
+    const session = currentLiveSession();
+    if (!session) return;
+    const data = formData(form);
+    const completedSets = Math.max(0, number(session.completedSets));
+    const previousPlanId = session.planId || null;
+
+    session.bodyPart = data.bodyPart;
+    session.exercise = data.exercise.trim();
+    session.targetSets = Math.max(1, completedSets, number(data.targetSets, 1));
+    session.reps = Math.max(1, number(data.reps, 1));
+    session.weight = Math.max(0, number(data.weight));
+    session.rest = Math.max(0, number(data.rest));
+    session.rpe = Math.min(10, Math.max(1, number(data.rpe, 7)));
+    session.planId = data.planId || null;
+    session.restEndsAt = session.restEndsAt && session.rest > 0
+      ? Date.now() + session.rest * 1000
+      : null;
+
+    updateLiveWorkout(session);
+    if (previousPlanId && previousPlanId !== session.planId) syncPlanCompletion(previousPlanId);
+    saveState("本次训练信息已更新，后续计数会使用新设置。");
+    render();
+  }
+
+  function addLiveTargetSet() {
+    const session = currentLiveSession();
+    if (!session) return;
+    session.targetSets = Math.max(1, number(session.targetSets), number(session.completedSets)) + 1;
+    session.restEndsAt = session.rest > 0 ? Date.now() + number(session.rest) * 1000 : null;
+    updateLiveWorkout(session);
+    saveState(`目标已增加到 ${session.targetSets} 组。`);
+    render();
+  }
+
   function completeLiveSet() {
     const session = currentLiveSession();
     if (!session || number(session.completedSets) >= number(session.targetSets)) return;
@@ -1332,6 +1389,8 @@
 
     if (action.dataset.action === "undo-live-set") undoLiveSet();
 
+    if (action.dataset.action === "add-live-target-set") addLiveTargetSet();
+
     if (action.dataset.action === "skip-rest") {
       const session = currentLiveSession();
       if (session) {
@@ -1383,7 +1442,8 @@
       "plan-form": addPlan,
       "nutrition-form": addNutrition,
       "body-form": addBody,
-      "live-session-form": startLiveSession
+      "live-session-form": startLiveSession,
+      "live-session-edit-form": updateLiveSession
     };
     const handler = handlers[event.target.id];
     if (handler) handler(event.target);
