@@ -148,6 +148,7 @@
     state.version = DATA_VERSION;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      window.vitbCloud?.queueState(state);
       if (message) toast(message);
     } catch (error) {
       toast("本地保存失败，请检查浏览器存储空间。", true);
@@ -1003,15 +1004,38 @@
     return ["workouts", "activities", "plans", "nutrition", "body"].reduce((sum, key) => sum + state[key].filter((item) => item.memberId === memberId).length, 0);
   }
 
+  function cloudStatusCard() {
+    const cloud = window.vitbCloud?.getStatus?.() || { mode: "local", signedIn: false, email: "" };
+    const statusLabel = {
+      checking: "检查连接中",
+      syncing: "正在同步",
+      synced: "已同步",
+      offline: "离线缓存",
+      error: "需要检查",
+      local: "尚未登录",
+      unavailable: "尚未配置"
+    }[cloud.mode] || "云端同步";
+    return `<article class="card card-pad section-gap cloud-account-card">
+      <div class="card-head"><div><h2 class="card-title">多设备云同步</h2><p class="card-subtitle">手机和电脑使用同一个账号</p></div><span class="tag">${statusLabel}</span></div>
+      <div class="cloud-account-row">
+        <div><strong>${cloud.signedIn ? esc(cloud.email || "已登录") : "当前只使用本机缓存"}</strong><small>${cloud.signedIn ? "Betty 与 Stephen 的全部模块都会自动同步。" : "登录后，本机现有数据可安全合并到云端。"}</small></div>
+        <div class="cloud-account-actions">
+          ${cloud.signedIn ? `<button class="button button-primary" type="button" data-cloud-action="sync-now">立即同步</button><button class="button button-quiet" type="button" data-cloud-action="sign-out">退出登录</button>` : `<button class="button button-primary" type="button" data-cloud-action="open-auth">登录同步账号</button>`}
+        </div>
+      </div>
+    </article>`;
+  }
+
   function renderPrivacy() {
     return `
       <section class="view">
         ${pageHead("privacy")}
         <div class="grid grid-2">
           <article class="card card-pad"><div class="card-head"><div><h2 class="card-title">独立数据权限</h2><p class="card-subtitle">按数据类型设置 Betty 与 Stephen 之间的查看边界</p></div><span class="tag">隐私优先</span></div><div class="privacy-list">${Object.entries(privacyMeta).map(([key, meta]) => `<div class="privacy-row"><div><strong>${meta[0]}</strong><small>${meta[1]}</small></div><select data-privacy="${key}" aria-label="${meta[0]}权限"><option value="private" ${state.privacy[key] === "private" ? "selected" : ""}>仅数据本人</option><option value="shared" ${state.privacy[key] === "shared" ? "selected" : ""}>允许另一位查看</option></select></div>`).join("")}</div></article>
-          <article class="card card-pad"><div class="card-head"><div><h2 class="card-title">当前数据边界</h2><p class="card-subtitle">第一阶段安全说明</p></div></div><div class="stack"><div class="future-note">所有内容仅写入当前浏览器的 localStorage，不会发送到 GitHub、Porkbun 或任何第三方服务。</div><div class="future-note">权限选项是未来后端的契约占位。接入同步时必须在服务端执行权限校验，不能只依赖前端隐藏。</div><div class="future-note">身体与饮食数据默认“仅自己”；导出的 JSON 文件可能包含敏感信息，请妥善保存。</div></div></article>
+          <article class="card card-pad"><div class="card-head"><div><h2 class="card-title">当前数据边界</h2><p class="card-subtitle">本机缓存与云端权限</p></div></div><div class="stack"><div class="future-note">数据会先写入当前浏览器；登录后再同步到专属 Supabase 账号，GitHub 和 Porkbun 不存储训练数据。</div><div class="future-note">云端表已开启 Row Level Security，只允许当前登录账号读取和更新自己的数据。</div><div class="future-note">身体与饮食数据仍属于敏感信息；导出的 JSON 文件包含完整备份，请妥善保存。</div></div></article>
         </div>
-        <article class="card card-pad section-gap"><div class="card-head"><div><h2 class="card-title">本地数据管理</h2><p class="card-subtitle">导出备份、导入恢复或清除当前设备数据</p></div></div><div class="data-actions"><div class="data-action-card"><strong>导出 JSON</strong><small>下载完整记录、成员和权限设置。</small><button class="button button-quiet" type="button" data-action="export-data">导出备份</button></div><div class="data-action-card"><strong>导入 JSON</strong><small>导入会替换当前浏览器里的全部数据。</small><label class="button button-quiet" for="import-file">选择文件</label><input class="file-input" id="import-file" type="file" accept="application/json"></div><div class="data-action-card"><strong>清除本地数据</strong><small>此操作不可撤销，请先导出备份。</small><button class="button button-danger" type="button" data-action="reset-data">清除数据</button></div></div></article>
+        ${cloudStatusCard()}
+        <article class="card card-pad section-gap"><div class="card-head"><div><h2 class="card-title">数据管理</h2><p class="card-subtitle">导出备份、导入恢复或清除全部数据</p></div></div><div class="data-actions"><div class="data-action-card"><strong>导出 JSON</strong><small>下载完整记录、成员和权限设置。</small><button class="button button-quiet" type="button" data-action="export-data">导出备份</button></div><div class="data-action-card"><strong>导入 JSON</strong><small>导入会替换当前数据并同步到其他设备。</small><label class="button button-quiet" for="import-file">选择文件</label><input class="file-input" id="import-file" type="file" accept="application/json"></div><div class="data-action-card"><strong>清除全部数据</strong><small>登录时会同步清空其他设备，请先导出备份。</small><button class="button button-danger" type="button" data-action="reset-data">清除数据</button></div></div></article>
       </section>`;
   }
 
@@ -1424,7 +1448,7 @@
     if (action.dataset.action === "export-data") exportData();
 
     if (action.dataset.action === "reset-data") {
-      const approved = await confirmAction("清除所有本地数据？", "Betty 与 Stephen 的训练、运动、计划、饮食、身体数据和实时计数都会被永久删除。两个固定界面会保留。此操作不会影响 GitHub 仓库。");
+      const approved = await confirmAction("清除所有训练数据？", "Betty 与 Stephen 的训练、运动、计划、饮食、身体数据和实时计数都会被永久删除。已登录云端时，此修改也会同步到其他设备。两个固定界面会保留。");
       if (approved) {
         state = makeInitialState();
         saveState("所有本地数据已清除。");
@@ -1488,4 +1512,19 @@
   window.setInterval(updateRestCountdown, 1000);
 
   render();
+  window.vitbCloud?.connect({
+    getState: () => JSON.parse(JSON.stringify(state)),
+    applyState: (nextState, message = "") => {
+      state = normalizeState(nextState);
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch (error) {
+        console.error("Unable to cache cloud data", error);
+      }
+      render();
+      if (message) toast(message);
+    },
+    confirmMigration: confirmAction,
+    rerender: render
+  });
 })();
