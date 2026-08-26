@@ -8,10 +8,34 @@
   <title>VITB Sport · 训练与运动记录</title>
   <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='18' fill='%23101714'/%3E%3Cpath d='M18 38V26m7 17V21m14 22V21m7 17V26M13 32h38' stroke='%23b7f36b' stroke-width='5' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="styles.css">
+  <script src="cloud-config.js" defer></script>
+  <script src="cloud.js" defer></script>
   <script src="app.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main-content">跳到主要内容</a>
+
+  <section class="cloud-auth-gate" id="cloud-auth-gate" role="dialog" aria-modal="true" aria-labelledby="cloud-auth-title">
+    <div class="cloud-auth-card">
+      <span class="cloud-auth-logo" aria-hidden="true">
+        <svg viewBox="0 0 32 32"><path d="M7 19v-6m4 9V10m10 12V10m4 9v-6M4 16h24"/></svg>
+      </span>
+      <p class="eyebrow">VITB SPORT · CLOUD</p>
+      <h1 id="cloud-auth-title">登录后，手机和电脑自动同步。</h1>
+      <p class="cloud-auth-copy">使用同一个同步账号，Betty 与 Stephen 两个界面及全部记录都会保持一致。</p>
+      <form id="cloud-auth-form">
+        <label class="cloud-auth-field" for="cloud-email"><span>登录邮箱</span><input id="cloud-email" name="email" type="email" autocomplete="email" placeholder="name@example.com" required></label>
+        <label class="cloud-auth-field" for="cloud-password"><span>密码</span><input id="cloud-password" name="password" type="password" autocomplete="current-password" minlength="6" placeholder="至少 6 位" required></label>
+        <div class="cloud-auth-actions">
+          <button class="button button-primary" type="submit" data-auth-intent="signin">登录并同步</button>
+          <button class="button button-quiet" type="submit" data-auth-intent="signup">首次使用，创建账号</button>
+        </div>
+      </form>
+      <p class="cloud-auth-message" id="cloud-auth-message" aria-live="polite"></p>
+      <div class="cloud-auth-note"><strong>现有记录不会丢失</strong><span>首次登录时会先询问是否把这台设备的数据合并到云端。</span></div>
+      <button class="cloud-local-link" type="button" data-cloud-action="use-local">暂时只在这台设备使用</button>
+    </div>
+  </section>
 
   <div class="app-shell">
     <aside class="sidebar" id="sidebar" aria-label="主要导航">
@@ -58,9 +82,9 @@
       </nav>
 
       <div class="sidebar-foot">
-        <div class="storage-card">
+        <div class="storage-card" id="storage-card">
           <span class="status-dot" aria-hidden="true"></span>
-          <div><strong>仅保存在本机</strong><small>未连接云端 · 可随时导出</small></div>
+          <div><strong id="storage-title">本机缓存已开启</strong><small id="storage-note">正在检查云端连接</small></div>
         </div>
       </div>
     </aside>
@@ -75,7 +99,7 @@
           <strong id="today-date">—</strong>
         </div>
         <div class="topbar-actions">
-          <span class="local-badge"><span class="status-dot"></span>本地模式</span>
+          <button class="local-badge cloud-badge" id="cloud-status" type="button" data-cloud-action="sync-now" aria-label="立即同步云端数据"><span class="status-dot"></span><span id="cloud-status-text">检查登录</span></button>
           <div class="profile-switch" aria-label="切换个人界面">
             <button class="profile-option" type="button" data-action="select-member" data-id="betty"><span>B</span><strong>Betty</strong></button>
             <button class="profile-option" type="button" data-action="select-member" data-id="stephen"><span>S</span><strong>Stephen</strong></button>
@@ -104,7 +128,7 @@
   </dialog>
 
   <noscript>
-    <div class="noscript">此应用需要 JavaScript 才能保存和展示本地训练数据。</div>
+    <div class="noscript">此应用需要 JavaScript 才能保存、同步和展示训练数据。</div>
   </noscript>
 </body>
 </html>
