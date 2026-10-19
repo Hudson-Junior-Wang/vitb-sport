@@ -500,3 +500,48 @@ main { padding: clamp(22px, 4vw, 48px); }
   body { background: #fff; }
   .card, .dashboard-weekly-overview { break-inside: avoid; box-shadow: none; }
 }
+
+
+/* Stephen-only upper body programme */
+.stephen-program { padding: 24px; overflow: hidden; }
+.stephen-program-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.stephen-kicker { display: block; margin-bottom: 9px; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.stephen-program h2 { margin: 0 0 8px; font-size: clamp(20px, 2.4vw, 28px); letter-spacing: -.045em; }
+.stephen-program-head p { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.8; }
+.stephen-program-action { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; flex-shrink: 0; }
+.stephen-program-action .button:disabled { opacity: .65; cursor: default; }
+.stephen-program-meta { display: flex; flex-wrap: wrap; gap: 8px 24px; margin: 18px 0; padding: 12px 14px; border-radius: 12px; background: var(--surface-soft); color: var(--muted); font-size: 11px; }
+.stephen-days { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.stephen-day { border-bottom: 1px solid var(--line); }
+.stephen-day:last-child { border-bottom: 0; }
+.stephen-day > summary { display: flex; align-items: center; gap: 16px; padding: 16px; list-style: none; cursor: pointer; }
+.stephen-day > summary::-webkit-details-marker { display: none; }
+.stephen-day.is-today > summary { background: var(--lime-wash); }
+.stephen-day-name { display: flex; flex-direction: column; gap: 4px; min-width: 40px; font-size: 12px; font-weight: 800; }
+.stephen-day-name small { color: var(--muted); font-size: 10px; font-weight: 500; }
+.stephen-day-title { flex: 1; min-width: 0; }
+.stephen-day-title strong, .stephen-day-title small { display: block; }
+.stephen-day-title strong { font-size: 13px; line-height: 1.5; }
+.stephen-day-title small { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.stephen-day-tag { padding: 6px 9px; border-radius: 8px; background: var(--surface-soft); color: var(--muted); font-size: 10px; white-space: nowrap; }
+.stephen-day-chevron { font-size: 17px; color: var(--muted); }
+.stephen-day[open] .stephen-day-chevron { transform: rotate(180deg); }
+.stephen-day-content { padding: 0 18px 18px 72px; }
+.stephen-exercises { margin: 2px 0 12px; padding: 0; list-style: none; counter-reset: stephen; }
+.stephen-exercises li { counter-increment: stephen; display: flex; justify-content: space-between; align-items: baseline; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: 12px; }
+.stephen-exercises li::before { content: counter(stephen, decimal-leading-zero); width: 26px; flex-shrink: 0; color: var(--muted); font-size: 10px; }
+.stephen-exercises li span { flex: 1; }
+.stephen-exercises li strong { font-size: 11px; white-space: nowrap; }
+.stephen-tip, .stephen-rest-copy, .stephen-disclaimer { color: var(--muted); font-size: 11px; line-height: 1.75; }
+.stephen-tip { margin: 0; }
+.stephen-disclaimer { margin: 15px 0 0; }
+@media (max-width: 620px) {
+  .stephen-program { padding: 16px; }
+  .stephen-program-head { flex-direction: column; }
+  .stephen-program-action { align-items: center; flex-direction: row; width: 100%; justify-content: space-between; }
+  .stephen-day > summary { gap: 9px; padding: 13px 10px; }
+  .stephen-day-content { padding: 0 11px 14px; }
+  .stephen-day-tag { font-size: 9px; }
+  .stephen-exercises li { gap: 7px; }
+  .stephen-exercises li strong { white-space: normal; text-align: right; }
+}
