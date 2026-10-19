@@ -50,6 +50,169 @@
     privacy: ["隐私与数据", "每类数据独立设置权限，并由你掌握本地备份。"]
   };
 
+  const stephenUpperBodySchedule = [
+  {
+    "day": "周一",
+    "title": "推 A｜胸部重点",
+    "type": "training",
+    "target": "胸部 · 肩中束 · 三头",
+    "duration": 65,
+    "exercises": [
+      [
+        "杠铃卧推",
+        "3 组 × 6–8 次"
+      ],
+      [
+        "上斜哑铃卧推",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "绳索夹胸",
+        "2 组 × 12–15 次"
+      ],
+      [
+        "哑铃侧平举",
+        "3 组 × 12–20 次"
+      ],
+      [
+        "绳索三头下压",
+        "3 组 × 10–15 次"
+      ]
+    ],
+    "tip": "复合动作休息 2–3 分钟，孤立动作休息 1–2 分钟。"
+  },
+  {
+    "day": "周二",
+    "title": "拉 A｜背部重点",
+    "type": "training",
+    "target": "背部 · 肩后束 · 二头",
+    "duration": 65,
+    "exercises": [
+      [
+        "高位下拉",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "坐姿划船",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "单臂器械划船",
+        "2 组 × 10–12 次"
+      ],
+      [
+        "反向飞鸟",
+        "3 组 × 12–20 次"
+      ],
+      [
+        "哑铃弯举",
+        "3 组 × 10–15 次"
+      ]
+    ],
+    "tip": "下拉与划船兼顾背阔肌和上背部，控制动作幅度。"
+  },
+  {
+    "day": "周三",
+    "title": "核心｜腹部专项",
+    "type": "training",
+    "target": "腹直肌 · 核心稳定",
+    "duration": 25,
+    "exercises": [
+      [
+        "绳索卷腹",
+        "3 组 × 12–15 次"
+      ],
+      [
+        "悬垂举膝",
+        "3 组 × 10–15 次"
+      ],
+      [
+        "平板支撑",
+        "3 组 × 30–60 秒"
+      ]
+    ],
+    "tip": "采用可控速度，不必每一组都练到力竭。"
+  },
+  {
+    "day": "周四",
+    "title": "休息｜恢复日",
+    "type": "rest",
+    "target": "恢复 · 轻度活动",
+    "duration": 0,
+    "exercises": [],
+    "tip": "以睡眠和恢复为主，可轻松散步或活动肩背。"
+  },
+  {
+    "day": "周五",
+    "title": "推 B｜肩部重点",
+    "type": "training",
+    "target": "肩部 · 胸部 · 三头",
+    "duration": 65,
+    "exercises": [
+      [
+        "坐姿哑铃推举",
+        "3 组 × 6–10 次"
+      ],
+      [
+        "哑铃侧平举",
+        "4 组 × 12–20 次"
+      ],
+      [
+        "上斜器械推胸",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "蝴蝶机夹胸",
+        "2 组 × 12–15 次"
+      ],
+      [
+        "绳索过顶臂屈伸",
+        "3 组 × 10–15 次"
+      ]
+    ],
+    "tip": "优先肩部训练；肩前束已参与卧推，不额外堆叠前平举。"
+  },
+  {
+    "day": "周六",
+    "title": "拉 B｜背部＋二头＋腹",
+    "type": "training",
+    "target": "背部 · 二头 · 腹部",
+    "duration": 65,
+    "exercises": [
+      [
+        "对握高位下拉",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "胸托划船",
+        "3 组 × 8–12 次"
+      ],
+      [
+        "直臂下压",
+        "2 组 × 12–15 次"
+      ],
+      [
+        "锤式弯举",
+        "3 组 × 10–12 次"
+      ],
+      [
+        "绳索卷腹",
+        "3 组 × 12–15 次"
+      ]
+    ],
+    "tip": "让背部主导发力；这一日额外补充腹部训练。"
+  },
+  {
+    "day": "周日",
+    "title": "休息｜恢复日",
+    "type": "rest",
+    "target": "恢复 · 轻度活动",
+    "duration": 0,
+    "exercises": [],
+    "tip": "完成一周复盘，检查胸、肩、背及手臂恢复情况。"
+  }
+];
+
   const fixedMembers = [
     { id: "betty", name: "Betty", role: "个人训练空间", color: "#b7f36b", initial: "B" },
     { id: "stephen", name: "Stephen", role: "个人训练空间", color: "#8fb4ff", initial: "S" }
@@ -782,6 +945,63 @@
     return `<div class="field"><label for="field-planId">关联计划（可选）</label><select id="field-planId" name="planId"><option value="">不关联计划</option>${plans.map((plan) => `<option value="${plan.id}" ${plan.id === selected ? "selected" : ""}>${formatDate(plan.date, { month: "numeric", day: "numeric" })} · ${esc(plan.title)}</option>`).join("")}</select></div>`;
   }
 
+  function renderStephenUpperBodyPlan() {
+    if (activeMember().id !== "stephen") return "";
+    const dates = weekDates();
+    const weekAdded = stephenUpperBodySchedule.filter((day, index) =>
+      state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1")
+    ).length;
+    const dayCards = stephenUpperBodySchedule.map((day, index) => {
+      const today = dates[index] === dateOffset(0);
+      const added = state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1");
+      const exerciseMarkup = day.exercises.length
+        ? '<ol class="stephen-exercises">' + day.exercises.map((exercise) =>
+            '<li><span>' + esc(exercise[0]) + '</span><strong>' + esc(exercise[1]) + '</strong></li>'
+          ).join("") + '</ol>'
+        : '<p class="stephen-rest-copy">主动恢复，不安排负重力量训练。</p>';
+      return '<details class="stephen-day' + (today ? ' is-today' : '') + '"' + (today ? ' open' : '') + '>' +
+        '<summary><span class="stephen-day-name">' + esc(day.day) + '<small>' + esc(formatDate(dates[index], { month: "numeric", day: "numeric" })) + '</small></span>' +
+        '<span class="stephen-day-title"><strong>' + esc(day.title) + '</strong><small>' + esc(day.target) + '</small></span>' +
+        '<span class="stephen-day-tag">' + (added ? '已加入' : day.type === "rest" ? '休息' : day.duration + ' 分钟') + '</span><span aria-hidden="true" class="stephen-day-chevron">⌄</span></summary>' +
+        '<div class="stephen-day-content">' + exerciseMarkup + '<p class="stephen-tip">' + esc(day.tip) + '</p></div></details>';
+    }).join("");
+    return '<section class="card stephen-program section-gap"><div class="stephen-program-head">' +
+      '<div><span class="stephen-kicker">STEPHEN · UPPER BODY</span><h2>上肢专项训练计划</h2>' +
+      '<p>三分化思路调整版：胸、肩、背、腹和手臂。每周 5 练 2 休，不含腿部训练。</p></div>' +
+      '<div class="stephen-program-action"><span class="tag">' + weekAdded + ' / 7 天已加入</span>' +
+      '<button class="button button-primary" type="button" data-action="add-stephen-upper-plan"' + (weekAdded === 7 ? ' disabled' : '') + '>' +
+      (weekAdded === 7 ? '✓ 本周已加入' : '＋ 加入本周计划') + '</button></div></div>' +
+      '<div class="stephen-program-meta"><span>推 A / 拉 A / 核心 / 休息 / 推 B / 拉 B / 休息</span>' +
+      '<span>正式组不含热身，通常保留 1–3 次力竭余量</span></div>' +
+      '<div class="stephen-days">' + dayCards + '</div>' +
+      '<p class="stephen-disclaimer">参考推拉分化原则重新编排，并非谭成义或凯圣王的原版课表。加入后可使用网站现有训练记录功能追踪进度。</p></section>';
+  }
+
+  function addStephenUpperWeek() {
+    if (activeMember().id !== "stephen") return;
+    const dates = weekDates();
+    let added = 0;
+    stephenUpperBodySchedule.forEach((day, index) => {
+      if (state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1")) return;
+      const exerciseText = day.exercises.map(([name, sets]) => name + " " + sets).join("；");
+      state.plans.push({
+        id: uid(),
+        memberId: "stephen",
+        date: dates[index],
+        type: day.type,
+        title: day.title,
+        duration: day.duration,
+        notes: (exerciseText ? "动作：" + exerciseText + "。 " : "") + day.tip,
+        completed: false,
+        stephenTemplateId: "upper-body-v1"
+      });
+      added += 1;
+    });
+    if (!added) { toast("Stephen 本周计划已全部加入。"); return; }
+    saveState("已为 Stephen 加入 " + added + " 天上肢训练与恢复计划。");
+    render();
+  }
+
   function renderPlans() {
     const plans = sorted(recordsFor("plans"), "asc");
     const weekPlans = plans.filter((item) => isThisWeek(item.date));
@@ -794,6 +1014,8 @@
           <article class="card card-pad span-2"><div class="card-head"><div><h2 class="card-title">本周计划</h2><p class="card-subtitle">周一至周日</p></div><span class="tag">${completed}/${weekPlans.length} 已完成</span></div>${renderWeekStrip(plans)}</article>
           <article class="card card-pad"><div class="card-head"><div><h2 class="card-title">完成情况</h2><p class="card-subtitle">本周计划执行进度</p></div></div><div style="display:flex;align-items:center;justify-content:center;gap:18px"><div class="completion-ring" style="--value:${completion}"><strong>${completion}%</strong></div><div><strong>${completed} 项</strong><small style="display:block;color:var(--muted)">共 ${weekPlans.length} 项计划</small></div></div></article>
         </div>
+
+        ${renderStephenUpperBodyPlan()}
 
         <details class="card composer section-gap" id="plan-composer">
           <summary><span class="composer-title"><strong>添加训练计划</strong><small>安排训练日、运动日或主动恢复</small></span></summary>
@@ -1348,6 +1570,7 @@
 
     const action = event.target.closest("[data-action]");
     if (!action) return;
+    if (action.dataset.action === "add-stephen-upper-plan") { addStephenUpperWeek(); return; }
 
     if (action.dataset.action === "toggle-plan") {
       const plan = state.plans.find((item) => item.id === action.dataset.id);
