@@ -545,3 +545,51 @@ main { padding: clamp(22px, 4vw, 48px); }
   .stephen-exercises li { gap: 7px; }
   .stephen-exercises li strong { white-space: normal; text-align: right; }
 }
+
+
+/* Stephen flexible training planner */
+.stephen-program .stephen-program-head { align-items: center; margin-bottom: 18px; }
+.stephen-program .stephen-program-head .tag { flex-shrink: 0; }
+.stephen-flex-composer { border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+.stephen-flex-composer > summary { padding: 17px 18px; background: var(--surface-soft); font-size: 13px; font-weight: 800; cursor: pointer; list-style: none; display: flex; align-items: center; justify-content: space-between; }
+.stephen-flex-composer > summary::-webkit-details-marker { display: none; }
+.stephen-flex-form { padding: 18px; display: grid; gap: 14px; }
+.stephen-flex-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; align-items: start; }
+.stephen-flex-fields .field { min-width: 0; }
+.stephen-flex-fields .field input, .stephen-flex-fields .field select, .stephen-flex-fields .field textarea { width: 100%; min-width: 0; }
+.stephen-selected-preview { background: var(--surface-soft); border: 1px solid var(--line); border-radius: 12px; padding: 16px; }
+.stephen-preview-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: baseline; gap: 5px 18px; margin-bottom: 9px; }
+.stephen-preview-head strong { font-size: 13px; }
+.stephen-preview-head span { font-size: 11px; color: var(--muted); }
+.stephen-selected-preview .stephen-exercises { margin-bottom: 12px; }
+.stephen-selected-preview .stephen-exercises li { padding: 9px 0; }
+.stephen-custom-focus[hidden] { display: none !important; }
+.stephen-custom-focus { display: grid; gap: 8px; }
+.stephen-input-label { font-size: 12px; font-weight: 700; }
+.stephen-focus-options { display: flex; gap: 8px; flex-wrap: wrap; }
+.stephen-focus-options label { display: inline-flex; align-items: center; gap: 6px; background: var(--surface-soft); border: 1px solid var(--line); border-radius: 9px; padding: 8px 11px; cursor: pointer; font-size: 12px; }
+.stephen-focus-options input { accent-color: var(--lime-strong); }
+.stephen-flex-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 14px; }
+.stephen-flex-actions span { font-size: 11px; color: var(--muted); line-height: 1.7; }
+.stephen-legacy-note { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--surface-soft); padding: 13px; margin-top: 16px; border-radius: 12px; }
+.stephen-legacy-note strong { font-size: 12px; }
+.stephen-legacy-note p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.65; }
+.stephen-legacy-note button { flex-shrink: 0; }
+.stephen-plan-edit { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 10px; }
+.stephen-plan-edit label { color: var(--muted); font-size: 10px; }
+.stephen-plan-edit input { width: 145px; min-width: 0; border: 1px solid var(--line); border-radius: 8px; padding: 7px 9px; font-size: 11px; background: var(--surface); color: var(--ink); }
+.stephen-plan-edit .button { font-size: 10px; padding: 7px 10px; }
+.stephen-quick-entry { display: flex; align-items: center; justify-content: space-between; gap: 18px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); padding: 18px 22px; }
+.stephen-quick-entry strong { display: block; font-size: 18px; letter-spacing: -.02em; }
+.stephen-quick-entry p { color: var(--muted); font-size: 12px; margin: 5px 0 0; }
+.stephen-quick-entry .stephen-kicker { margin-bottom: 4px; }
+.stephen-quick-entry .button { flex-shrink: 0; }
+@media (max-width: 620px) {
+  .stephen-flex-fields { grid-template-columns: 1fr; }
+  .stephen-flex-form { padding: 12px; }
+  .stephen-program .stephen-program-head { gap: 9px; align-items: flex-start; }
+  .stephen-legacy-note { align-items: stretch; flex-direction: column; }
+  .stephen-quick-entry { flex-direction: column; align-items: stretch; padding: 16px; }
+  .stephen-quick-entry .button { width: 100%; }
+  .stephen-plan-edit input { width: 132px; }
+}
