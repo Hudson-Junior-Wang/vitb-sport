@@ -591,6 +591,7 @@
       <section class="view">
         ${renderWeeklyOverview()}
 
+        ${renderStephenQuickEntry()}
         ${renderLiveCounter(liveSession)}
 
         <div class="grid grid-4 stats-mobile section-gap">
@@ -945,61 +946,135 @@
     return `<div class="field"><label for="field-planId">关联计划（可选）</label><select id="field-planId" name="planId"><option value="">不关联计划</option>${plans.map((plan) => `<option value="${plan.id}" ${plan.id === selected ? "selected" : ""}>${formatDate(plan.date, { month: "numeric", day: "numeric" })} · ${esc(plan.title)}</option>`).join("")}</select></div>`;
   }
 
-  function renderStephenUpperBodyPlan() {
-    if (activeMember().id !== "stephen") return "";
-    const dates = weekDates();
-    const weekAdded = stephenUpperBodySchedule.filter((day, index) =>
-      state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1")
-    ).length;
-    const dayCards = stephenUpperBodySchedule.map((day, index) => {
-      const today = dates[index] === dateOffset(0);
-      const added = state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1");
-      const exerciseMarkup = day.exercises.length
-        ? '<ol class="stephen-exercises">' + day.exercises.map((exercise) =>
-            '<li><span>' + esc(exercise[0]) + '</span><strong>' + esc(exercise[1]) + '</strong></li>'
-          ).join("") + '</ol>'
-        : '<p class="stephen-rest-copy">主动恢复，不安排负重力量训练。</p>';
-      return '<details class="stephen-day' + (today ? ' is-today' : '') + '"' + (today ? ' open' : '') + '>' +
-        '<summary><span class="stephen-day-name">' + esc(day.day) + '<small>' + esc(formatDate(dates[index], { month: "numeric", day: "numeric" })) + '</small></span>' +
-        '<span class="stephen-day-title"><strong>' + esc(day.title) + '</strong><small>' + esc(day.target) + '</small></span>' +
-        '<span class="stephen-day-tag">' + (added ? '已加入' : day.type === "rest" ? '休息' : day.duration + ' 分钟') + '</span><span aria-hidden="true" class="stephen-day-chevron">⌄</span></summary>' +
-        '<div class="stephen-day-content">' + exerciseMarkup + '<p class="stephen-tip">' + esc(day.tip) + '</p></div></details>';
-    }).join("");
-    return '<section class="card stephen-program section-gap"><div class="stephen-program-head">' +
-      '<div><span class="stephen-kicker">STEPHEN · UPPER BODY</span><h2>上肢专项训练计划</h2>' +
-      '<p>三分化思路调整版：胸、肩、背、腹和手臂。每周 5 练 2 休，不含腿部训练。</p></div>' +
-      '<div class="stephen-program-action"><span class="tag">' + weekAdded + ' / 7 天已加入</span>' +
-      '<button class="button button-primary" type="button" data-action="add-stephen-upper-plan"' + (weekAdded === 7 ? ' disabled' : '') + '>' +
-      (weekAdded === 7 ? '✓ 本周已加入' : '＋ 加入本周计划') + '</button></div></div>' +
-      '<div class="stephen-program-meta"><span>推 A / 拉 A / 核心 / 休息 / 推 B / 拉 B / 休息</span>' +
-      '<span>正式组不含热身，通常保留 1–3 次力竭余量</span></div>' +
-      '<div class="stephen-days">' + dayCards + '</div>' +
-      '<p class="stephen-disclaimer">参考推拉分化原则重新编排，并非谭成义或凯圣王的原版课表。加入后可使用网站现有训练记录功能追踪进度。</p></section>';
+  function stephenPreset(id) {
+    const ids=["push-a","pull-a","core","push-b","pull-b"];
+    return stephenUpperBodySchedule.filter(item=>item.type==="training").map((item,index)=>({...item,id:ids[index]})).find(item=>item.id===id)||null;
   }
 
-  function addStephenUpperWeek() {
-    if (activeMember().id !== "stephen") return;
-    const dates = weekDates();
-    let added = 0;
-    stephenUpperBodySchedule.forEach((day, index) => {
-      if (state.plans.some((plan) => plan.memberId === "stephen" && plan.date === dates[index] && plan.stephenTemplateId === "upper-body-v1")) return;
-      const exerciseText = day.exercises.map(([name, sets]) => name + " " + sets).join("；");
-      state.plans.push({
-        id: uid(),
-        memberId: "stephen",
-        date: dates[index],
-        type: day.type,
-        title: day.title,
-        duration: day.duration,
-        notes: (exerciseText ? "动作：" + exerciseText + "。 " : "") + day.tip,
-        completed: false,
-        stephenTemplateId: "upper-body-v1"
-      });
-      added += 1;
-    });
-    if (!added) { toast("Stephen 本周计划已全部加入。"); return; }
-    saveState("已为 Stephen 加入 " + added + " 天上肢训练与恢复计划。");
+  function stephenPreview(id) {
+    const preset=stephenPreset(id);
+    if(id==="rest") return '<p class="stephen-rest-copy">休息日由你决定，不会被固定在周四或周日。可以正常散步或做轻量活动。</p>';
+    if(id==="custom") return '<p class="stephen-rest-copy">从下方选择想练的部位，或填写自己的训练名称和动作。当天怎么练，由你决定。</p>';
+    if(!preset) return "";
+    return '<div class="stephen-preview-head"><strong>'+esc(preset.title)+'</strong><span>'+esc(preset.target)+'</span></div>'+
+      '<ol class="stephen-exercises">'+preset.exercises.map((exercise)=>'<li><span>'+esc(exercise[0])+'</span><strong>'+esc(exercise[1])+'</strong></li>').join("")+'</ol>'+
+      '<p class="stephen-tip">'+esc(preset.tip)+'</p>';
+  }
+
+  function renderStephenFlexPlan() {
+    if(activeMember().id!=="stephen") return "";
+    const templates=stephenUpperBodySchedule.filter(item=>item.type==="training");
+    const ids=["push-a","pull-a","core","push-b","pull-b"];
+    const legacy=state.plans.filter(item=>item.memberId==="stephen" && item.stephenTemplateId==="upper-body-v1" && !item.completed && ![...state.workouts].some(w=>w.planId===item.id && w.status==="in_progress") && !Object.values(state.liveSessions).some(session=>session?.planId===item.id)).length;
+    return `<section class="card stephen-program section-gap">
+      <div class="stephen-program-head">
+        <div>
+          <span class="stephen-kicker">STEPHEN · FLEXIBLE UPPER BODY</span>
+          <h2>今天想练什么，就安排什么</h2>
+          <p>胸、肩、背、腹、二头、三头自由组合。不再固定“周一练胸、周二练背”。临时坐飞机或没空，就换一天。</p>
+        </div><span class="tag">自由排期</span>
+      </div>
+      <details class="stephen-flex-composer" id="stephen-flex-composer" open>
+        <summary>＋ 新建一次训练 / 恢复日 <span aria-hidden="true">⌄</span></summary>
+        <form class="stephen-flex-form" id="stephen-flex-form">
+          <div class="stephen-flex-fields">
+            <div class="field"><label for="stephen-flex-date">想在哪一天练？</label><input id="stephen-flex-date" name="date" type="date" value="${dateOffset(0)}" required></div>
+            <div class="field"><label for="stephen-flex-template">今天练什么？</label>
+              <select id="stephen-flex-template" name="presetId">
+                ${templates.map((item,index)=>`<option value="${ids[index]}">${esc(item.title)} · ${esc(item.target)}</option>`).join("")}
+                <option value="custom">自由组合｜自己选部位或填动作</option>
+                <option value="rest">休息 / 恢复日</option>
+              </select>
+            </div>
+          </div>
+          <div class="stephen-selected-preview" id="stephen-flex-preview">${stephenPreview("push-a")}</div>
+          <div class="stephen-custom-focus" id="stephen-custom-focus" hidden>
+            <span class="stephen-input-label">自由组合的部位（可多选）</span>
+            <div class="stephen-focus-options">${["胸","肩","背","腹","二头","三头"].map(part=>`<label><input type="checkbox" name="focus" value="${part}"><span>${part}</span></label>`).join("")}</div>
+          </div>
+          <div class="stephen-flex-fields">
+            <div class="field"><label for="stephen-flex-title">自定义名称（选填）</label><input id="stephen-flex-title" name="title" type="text" maxlength="80" placeholder="例如：今天只练背和二头"></div>
+            <div class="field"><label for="stephen-flex-notes">增加 / 调整动作（选填）</label><textarea id="stephen-flex-notes" name="notes" rows="2" placeholder="例如：加两组绳索弯举；今天强度轻一些"></textarea></div>
+          </div>
+          <div class="stephen-flex-actions">
+            <button class="button button-primary" type="submit">保存到选择的日期 →</button>
+            <span>保存后可以继续改期；只有实际记录训练才算完成。</span>
+          </div>
+        </form>
+      </details>
+      ${legacy?`<div class="stephen-legacy-note"><div><strong>发现 ${legacy} 条旧版固定星期计划</strong><p>不会自动删除。你可以在下面逐条改期，或只移除尚未开始的旧固定排期。</p></div><button class="button button-quiet button-small" type="button" data-action="stephen-clear-legacy">清理旧固定排期</button></div>`:""}
+      <p class="stephen-disclaimer">沿用上肢推拉训练动作作为可选模板，但不强制按周循环。注意相同肌群通常需要适当恢复。</p>
+    </section>`;
+  }
+
+  function updateStephenFlexPreview() {
+    if(activeMember().id!=="stephen")return;
+    const selector=document.querySelector("#stephen-flex-template");
+    const preview=document.querySelector("#stephen-flex-preview");
+    const custom=document.querySelector("#stephen-custom-focus");
+    if(!selector||!preview)return;
+    preview.innerHTML=stephenPreview(selector.value);
+    if(custom)custom.hidden=selector.value!=="custom";
+  }
+
+  function addStephenFlexPlan(form) {
+    if(activeMember().id!=="stephen")return;
+    const data=formData(form);
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(data.date)||Number.isNaN(parseDate(data.date).getTime())){
+      toast("请选择有效的训练日期。",true);return;
+    }
+    const preset=stephenPreset(data.presetId);
+    const rest=data.presetId==="rest";
+    const custom=data.presetId==="custom";
+    if(!preset&&!rest&&!custom){toast("请选择一个训练内容。",true);return;}
+    const chosenParts=custom?new FormData(form).getAll("focus").filter(part=>["胸","肩","背","腹","二头","三头"].includes(part)):[];
+    const title=(data.title||"").trim()||(preset?.title||(rest?"休息｜按需恢复":chosenParts.length?chosenParts.join("＋")+"｜自由训练":""));
+    if(!title){toast("自由训练请选至少一个部位，或填写训练名称。",true);return;}
+    const templateId=preset?"upper-flex-"+preset.id:rest?"upper-flex-rest":"upper-flex-custom";
+    if(state.plans.some(item=>item.memberId==="stephen"&&item.date===data.date&&item.title===title&&item.stephenTemplateId===templateId)){
+      toast("这一天已有同名计划，可直接在下面改期或编辑安排。",true);return;
+    }
+    const exercises=preset?("参考动作："+preset.exercises.map(ex=>ex[0]+" "+ex[1]).join("；")):"";
+    const notes=[exercises,preset?.tip||"",String(data.notes||"").trim()].filter(Boolean).join("。\n");
+    state.plans.push({id:uid(),memberId:"stephen",date:data.date,type:rest?"rest":"training",title,duration:preset?preset.duration:rest?0:45,notes,completed:false,stephenTemplateId:templateId});
+    saveState("Stephen 已安排 "+data.date+" 的「"+title+"」。");
     render();
+  }
+
+  function moveStephenPlan(planId,date) {
+    const plan=state.plans.find(item=>item.id===planId&&item.memberId==="stephen");
+    if(activeMember().id!=="stephen"||!plan)return;
+    if(plan.completed){toast("已完成的训练不建议改期，请保留实际记录日期。",true);return;}
+    if(state.workouts.some(item=>item.planId===planId&&item.status==="in_progress")||Object.values(state.liveSessions).some(s=>s?.planId===planId)){
+      toast("训练正在计数，请先结束当前训练再改期。",true);return;
+    }
+    if(!/^\d{4}-\d{2}-\d{2}$/.test(date)||Number.isNaN(parseDate(date).getTime())){toast("请选择有效日期。",true);return;}
+    if(plan.date===date){toast("日期没有变化。");return;}
+    plan.date=date;
+    saveState("已将「"+plan.title+"」改到 "+date+"。");
+    render();
+  }
+
+  async function clearStephenLegacyPlans() {
+    if(activeMember().id!=="stephen")return;
+    const removable=state.plans.filter(item=>item.memberId==="stephen"&&item.stephenTemplateId==="upper-body-v1"&&!item.completed&&!state.workouts.some(w=>w.planId===item.id&&w.status==="in_progress")&&!Object.values(state.liveSessions).some(s=>s?.planId===item.id));
+    if(!removable.length){toast("没有需要清理的旧固定排期。");return;}
+    const accepted=await confirmAction("清理旧版固定排期？","只移除 Stephen "+removable.length+" 条未完成、未开始的旧版固定星期计划。其他计划及所有训练记录都会保留。");
+    if(!accepted)return;
+    const ids=new Set(removable.map(item=>item.id));
+    state.plans=state.plans.filter(item=>!ids.has(item.id));
+    saveState("已清理 "+ids.size+" 条旧版固定排期，训练记录未更改。");
+    render();
+  }
+
+  function stephenPlanControls(item) {
+    if(activeMember().id!=="stephen"||item.completed)return "";
+    return `<div class="stephen-plan-edit">
+      <label for="stephen-date-${esc(item.id)}">换一天：</label>
+      <input id="stephen-date-${esc(item.id)}" type="date" value="${esc(item.date)}" data-stephen-date-input="${esc(item.id)}" aria-label="为 ${esc(item.title)} 选择新日期">
+      <button class="button button-quiet button-small" type="button" data-action="stephen-reschedule" data-id="${esc(item.id)}">保存改期</button>
+      ${item.date!==dateOffset(0)?`<button class="button button-quiet button-small" type="button" data-action="stephen-move-today" data-id="${esc(item.id)}">移到今天</button>`:""}
+    </div>`;
   }
 
   function renderPlans() {
@@ -1015,7 +1090,7 @@
           <article class="card card-pad"><div class="card-head"><div><h2 class="card-title">完成情况</h2><p class="card-subtitle">本周计划执行进度</p></div></div><div style="display:flex;align-items:center;justify-content:center;gap:18px"><div class="completion-ring" style="--value:${completion}"><strong>${completion}%</strong></div><div><strong>${completed} 项</strong><small style="display:block;color:var(--muted)">共 ${weekPlans.length} 项计划</small></div></div></article>
         </div>
 
-        ${renderStephenUpperBodyPlan()}
+        ${renderStephenFlexPlan()}
 
         <details class="card composer section-gap" id="plan-composer">
           <summary><span class="composer-title"><strong>添加训练计划</strong><small>安排训练日、运动日或主动恢复</small></span></summary>
@@ -1036,8 +1111,8 @@
   }
 
   function planRow(item) {
-    const meta = planTypes[item.type] || planTypes.training;
-    return `<div class="plan-row ${item.completed ? "is-done" : ""}">${planStatusButton(item)}<span class="plan-date">${formatDate(item.date, { month: "numeric", day: "numeric", weekday: "short" })}</span><span class="plan-title"><strong>${esc(item.title)}</strong><small><span class="event-dot" style="--tone:${meta.tone}"></span>${meta.name}${item.duration ? ` · ${number(item.duration)} 分钟` : ""}${item.notes ? ` · ${esc(item.notes)}` : ""}${item.type !== "rest" ? item.completed ? " · 已同步记录" : " · 等待记录" : ""}</small></span><button class="danger-link" type="button" data-action="delete-record" data-collection="plans" data-id="${item.id}">删除</button></div>`;
+    const meta=planTypes[item.type]||planTypes.training;
+    return `<div class="plan-row ${item.completed?"is-done":""}">${planStatusButton(item)}<span class="plan-date">${formatDate(item.date,{month:"numeric",day:"numeric",weekday:"short"})}</span><span class="plan-title"><strong>${esc(item.title)}</strong><small><span class="event-dot" style="--tone:${meta.tone}"></span>${meta.name}${item.duration?` · ${number(item.duration)} 分钟`:""}${item.notes?` · ${esc(item.notes)}`:""}${item.type!=="rest"?(item.completed?" · 已同步记录":" · 等待记录"):""}</small>${stephenPlanControls(item)}</span><button class="danger-link" type="button" data-action="delete-record" data-collection="plans" data-id="${item.id}">删除</button></div>`;
   }
 
   function renderNutrition() {
@@ -1570,7 +1645,13 @@
 
     const action = event.target.closest("[data-action]");
     if (!action) return;
-    if (action.dataset.action === "add-stephen-upper-plan") { addStephenUpperWeek(); return; }
+    if (action.dataset.action === "stephen-reschedule" || action.dataset.action === "stephen-move-today") {
+      const id=action.dataset.id;
+      const newDate=action.dataset.action==="stephen-move-today"?dateOffset(0):document.querySelector('[data-stephen-date-input="'+id+'"]')?.value;
+      moveStephenPlan(id,newDate);
+      return;
+    }
+    if (action.dataset.action === "stephen-clear-legacy") { await clearStephenLegacyPlans(); return; }
 
     if (action.dataset.action === "toggle-plan") {
       const plan = state.plans.find((item) => item.id === action.dataset.id);
@@ -1687,6 +1768,7 @@
       "strength-form": addStrength,
       "activity-form": addActivity,
       "plan-form": addPlan,
+      "stephen-flex-form": addStephenFlexPlan,
       "nutrition-form": addNutrition,
       "body-form": addBody,
       "live-session-form": startLiveSession,
@@ -1697,6 +1779,7 @@
   });
 
   document.addEventListener("change", (event) => {
+    if (event.target.id === "stephen-flex-template") updateStephenFlexPreview();
     if (event.target.id === "sport-type") {
       const container = document.querySelector("#sport-fields");
       if (container) container.innerHTML = activityFields(event.target.value);
