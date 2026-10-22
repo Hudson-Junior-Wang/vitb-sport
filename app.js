@@ -1077,6 +1077,14 @@
     </div>`;
   }
 
+  function renderStephenQuickEntry() {
+    if (activeMember().id !== "stephen") return "";
+    return `<section class="stephen-quick-entry section-gap">
+      <div><span class="stephen-kicker">STEPHEN · FLEXIBLE TRAINING</span><strong>今天练什么，今天决定。</strong><p>行程有变就改期，不用追着固定周计划跑。</p></div>
+      <button class="button button-primary" type="button" data-navigate="plans" data-open="stephen-flex-composer">＋ 自由安排训练</button>
+    </section>`;
+  }
+
   function renderPlans() {
     const plans = sorted(recordsFor("plans"), "asc");
     const weekPlans = plans.filter((item) => isThisWeek(item.date));
